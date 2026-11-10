@@ -1,391 +1,573 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <ctime>
 #include <limits>
+#include <cctype>
 using namespace std;
 
-const int MAX_BOOKS = 100;
-const int MAX_MEMBERS = 100;
-
-int readInt(const string& prompt) {
-    int value;
-    while (true) {
-        cout << prompt;
-        if (cin >> value) {
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            return value;
-        }
-        cout << "Invalid input. Enter a number.\n";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    }
-}
+const int MAX = 100;
+const int FINE_PER_DAY = 5;
 
 class Book {
-private:
-    int bookID;
+public:
+    int id;
     string title, author;
     bool available;
 
-public:
-    Book() : bookID(0), available(true) {}
-
-    Book(int id, const string& t, const string& a)
-        : bookID(id), title(t), author(a), available(true) {}
-
-    int getBookID() const { return bookID; }
-    string getTitle() const { return title; }
-    string getAuthor() const { return author; }
-    bool isAvailable() const { return available; }
-
-    void setAvailability(bool status) { available = status; }
-
-    void setBookDetails(int id, const string& t, const string& a, bool status) {
-        bookID = id;
-        title = t;
-        author = a;
-        available = status;
-    }
-
-    void display() const {
-        cout << "Book ID: " << bookID
-             << "\nTitle: " << title
-             << "\nAuthor: " << author
-             << "\nStatus: " << (available ? "Available" : "Issued")
-             << "\n-------------------------\n";
+    Book() {
+        id = 0;
+        available = true;
     }
 };
 
 class Member {
-private:
-    int memberID;
-    string name, email;
-
 public:
-    Member() : memberID(0) {}
-
-    Member(int id, const string& n, const string& e)
-        : memberID(id), name(n), email(e) {}
-
-    int getMemberID() const { return memberID; }
-    string getName() const { return name; }
-    string getEmail() const { return email; }
-
-    void setMemberDetails(int id, const string& n, const string& e) {
-        memberID = id;
-        name = n;
-        email = e;
-    }
-
-    void display() const {
-        cout << "Member ID: " << memberID
-             << "\nName: " << name
-             << "\nEmail: " << email
-             << "\n-------------------------\n";
-    }
+    int id;
+    string name, email;
 };
 
 class Library {
 private:
-    Book books[MAX_BOOKS];
-    Member members[MAX_MEMBERS];
-    int bookCount, memberCount;
+    Book books[MAX];
+    Member members[MAX];
+    int bookCount = 0;
+    int memberCount = 0;
 
-    // Each issued book is linked to the member who borrowed it.
-    int issuedBookIDs[MAX_BOOKS];
-    int issuedMemberIDs[MAX_BOOKS];
-    int issueCount;
-
-    int findBookIndex(int id) const {
+    int findBook(int id) {
         for (int i = 0; i < bookCount; i++)
-            if (books[i].getBookID() == id) return i;
+            if (books[i].id == id) return i;
         return -1;
     }
 
-    int findMemberIndex(int id) const {
+    int findMember(int id) {
         for (int i = 0; i < memberCount; i++)
-            if (members[i].getMemberID() == id) return i;
+            if (members[i].id == id) return i;
         return -1;
     }
 
-    int findIssueIndex(int bookID) const {
-        for (int i = 0; i < issueCount; i++)
-            if (issuedBookIDs[i] == bookID) return i;
-        return -1;
-    }
-
-    void saveBooks() const {
+    void saveBooks() {
         ofstream file("books.txt");
-        if (!file) {
-            cout << "Error: Could not save books.txt\n";
-            return;
-        }
         for (int i = 0; i < bookCount; i++) {
-            file << books[i].getBookID() << '\n'
-                 << books[i].getTitle() << '\n'
-                 << books[i].getAuthor() << '\n'
-                 << books[i].isAvailable() << '\n';
+            file << books[i].id << '\n'
+                 << books[i].title << '\n'
+                 << books[i].author << '\n'
+                 << books[i].available << '\n';
         }
+    }
+
+    void saveMembers() {
+        ofstream file("members.txt");
+        for (int i = 0; i < memberCount; i++) {
+            file << members[i].id << '\n'
+                 << members[i].name << '\n'
+                 << members[i].email << '\n';
+        }
+    }
+
+    void logTransaction(const string& action, int bookID,
+                        int memberID, int days = 0, int fine = 0) {
+        ofstream file("transactions.txt", ios::app);
+        time_t now = time(0);
+        char* date = ctime(&now);
+
+        file << action << " | Book ID: " << bookID
+             << " | Member ID: " << memberID
+             << " | Date: " << (date ? date : "Unknown")
+             << "Days overdue: " << days
+             << " | Fine: Rs." << fine << "\n";
     }
 
     void loadBooks() {
         ifstream file("books.txt");
-        if (!file) return;
-
-        int id, status;
-        string title, author;
-        while (bookCount < MAX_BOOKS && file >> id) {
+        while (bookCount < MAX && (file >> books[bookCount].id)) {
             file.ignore(numeric_limits<streamsize>::max(), '\n');
-            if (!getline(file, title)) break;
-            if (!getline(file, author)) break;
-            if (!(file >> status)) break;
+            getline(file, books[bookCount].title);
+            getline(file, books[bookCount].author);
+            file >> books[bookCount].available;
             file.ignore(numeric_limits<streamsize>::max(), '\n');
-
-            books[bookCount].setBookDetails(id, title, author, status != 0);
             bookCount++;
-        }
-    }
-
-    void saveMembers() const {
-        ofstream file("members.txt");
-        if (!file) {
-            cout << "Error: Could not save members.txt\n";
-            return;
-        }
-        for (int i = 0; i < memberCount; i++) {
-            file << members[i].getMemberID() << '\n'
-                 << members[i].getName() << '\n'
-                 << members[i].getEmail() << '\n';
         }
     }
 
     void loadMembers() {
         ifstream file("members.txt");
-        if (!file) return;
-
-        int id;
-        string name, email;
-        while (memberCount < MAX_MEMBERS && file >> id) {
+        while (memberCount < MAX && (file >> members[memberCount].id)) {
             file.ignore(numeric_limits<streamsize>::max(), '\n');
-            if (!getline(file, name)) break;
-            if (!getline(file, email)) break;
-            members[memberCount].setMemberDetails(id, name, email);
+            getline(file, members[memberCount].name);
+            getline(file, members[memberCount].email);
             memberCount++;
         }
     }
 
-    void saveIssues() const {
+    void saveIssues(int issueBooks[], int issueMembers[], int count) {
         ofstream file("issued.txt");
-        if (!file) {
-            cout << "Error: Could not save issued.txt\n";
-            return;
-        }
-        for (int i = 0; i < issueCount; i++)
-            file << issuedBookIDs[i] << ' ' << issuedMemberIDs[i] << '\n';
+        for (int i = 0; i < count; i++)
+            file << issueBooks[i] << " " << issueMembers[i] << '\n';
     }
 
-    void loadIssues() {
+    int loadIssues(int issueBooks[], int issueMembers[]) {
         ifstream file("issued.txt");
-        if (!file) return;
+        int count = 0, bookID, memberID;
 
-        int bookID, memberID;
-        while (issueCount < MAX_BOOKS && file >> bookID >> memberID) {
-            int bi = findBookIndex(bookID);
-            int mi = findMemberIndex(memberID);
-            if (bi != -1 && mi != -1 && !books[bi].isAvailable()) {
-                issuedBookIDs[issueCount] = bookID;
-                issuedMemberIDs[issueCount] = memberID;
-                issueCount++;
+        while (count < MAX && file >> bookID >> memberID) {
+            int bi = findBook(bookID);
+            int mi = findMember(memberID);
+
+            if (bi != -1 && mi != -1 && !books[bi].available) {
+                issueBooks[count] = bookID;
+                issueMembers[count] = memberID;
+                count++;
             }
         }
+        return count;
+    }
+
+    string lower(string s) {
+        for (char& c : s)
+            c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
+        return s;
     }
 
 public:
-    Library() : bookCount(0), memberCount(0), issueCount(0) {
+    Library() {
         loadBooks();
         loadMembers();
-        loadIssues();
     }
 
     void addBook() {
-        if (bookCount >= MAX_BOOKS) {
-            cout << "Book storage is full.\n";
+        if (bookCount >= MAX) {
+            cout << "Book storage is full!\n";
             return;
         }
-        int id = readInt("Enter Book ID: ");
-        if (findBookIndex(id) != -1) {
-            cout << "A book with this ID already exists.\n";
+
+        Book b;
+        cout << "Enter Book ID: ";
+        cin >> b.id;
+
+        if (findBook(b.id) != -1) {
+            cout << "Book ID already exists!\n";
             return;
         }
-        string title, author;
-        cout << "Enter Book Title: ";
-        getline(cin, title);
-        cout << "Enter Author Name: ";
-        getline(cin, author);
-        if (title.empty() || author.empty()) {
-            cout << "Title and author cannot be empty.\n";
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Enter Title: ";
+        getline(cin, b.title);
+        cout << "Enter Author: ";
+        getline(cin, b.author);
+
+        if (b.title.empty() || b.author.empty()) {
+            cout << "Title and author cannot be empty!\n";
             return;
         }
-        books[bookCount++] = Book(id, title, author);
+
+        b.available = true;
+        books[bookCount++] = b;
         saveBooks();
-        cout << "Book added successfully.\n";
+        cout << "Book added successfully!\n";
     }
 
-    void displayBooks() const {
+    void displayBooks() {
         if (bookCount == 0) {
             cout << "No books found.\n";
             return;
         }
-        for (int i = 0; i < bookCount; i++) books[i].display();
+
+        cout << "\n------ BOOK LIST ------\n";
+        for (int i = 0; i < bookCount; i++) {
+            cout << "\nID: " << books[i].id
+                 << "\nTitle: " << books[i].title
+                 << "\nAuthor: " << books[i].author
+                 << "\nStatus: "
+                 << (books[i].available ? "Available" : "Issued")
+                 << "\n";
+        }
     }
 
-    void searchBook() const {
-        int id = readInt("Enter Book ID to search: ");
+    void searchBook() {
+        int id;
+        cout << "Enter Book ID: ";
+        cin >> id;
+
+        int i = findBook(id);
+        if (i == -1) {
+            cout << "Book not found!\n";
+            return;
+        }
+
+        cout << "\nTitle: " << books[i].title
+             << "\nAuthor: " << books[i].author
+             << "\nStatus: "
+             << (books[i].available ? "Available" : "Issued")
+             << '\n';
+    }
+
+    void searchBookByName() {
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        string key;
+        cout << "Enter title or author to search: ";
+        getline(cin, key);
+        key = lower(key);
+
+        bool found = false;
         for (int i = 0; i < bookCount; i++) {
-            if (books[i].getBookID() == id) {
-                books[i].display();
-                return;
+            if (lower(books[i].title).find(key) != string::npos ||
+                lower(books[i].author).find(key) != string::npos) {
+                cout << "\nID: " << books[i].id
+                     << "\nTitle: " << books[i].title
+                     << "\nAuthor: " << books[i].author
+                     << "\nStatus: "
+                     << (books[i].available ? "Available" : "Issued")
+                     << '\n';
+                found = true;
             }
         }
-        cout << "Book not found.\n";
+
+        if (!found) cout << "No matching book found!\n";
+    }
+
+    void updateBook() {
+        int id;
+        cout << "Enter Book ID to update: ";
+        cin >> id;
+
+        int i = findBook(id);
+        if (i == -1) {
+            cout << "Book not found!\n";
+            return;
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Enter new title: ";
+        getline(cin, books[i].title);
+        cout << "Enter new author: ";
+        getline(cin, books[i].author);
+
+        if (books[i].title.empty() || books[i].author.empty()) {
+            cout << "Invalid details. Update cancelled.\n";
+            return;
+        }
+
+        saveBooks();
+        cout << "Book updated successfully!\n";
+    }
+
+    void deleteBook() {
+        int id;
+        cout << "Enter Book ID to delete: ";
+        cin >> id;
+
+        int i = findBook(id);
+        if (i == -1) {
+            cout << "Book not found!\n";
+            return;
+        }
+
+        if (!books[i].available) {
+            cout << "Cannot delete an issued book!\n";
+            return;
+        }
+
+        for (int j = i; j < bookCount - 1; j++)
+            books[j] = books[j + 1];
+
+        bookCount--;
+        saveBooks();
+        cout << "Book deleted successfully!\n";
     }
 
     void registerMember() {
-        if (memberCount >= MAX_MEMBERS) {
-            cout << "Member storage is full.\n";
+        if (memberCount >= MAX) {
+            cout << "Member storage is full!\n";
             return;
         }
-        int id = readInt("Enter Member ID: ");
-        if (findMemberIndex(id) != -1) {
-            cout << "A member with this ID already exists.\n";
+
+        Member m;
+        cout << "Enter Member ID: ";
+        cin >> m.id;
+
+        if (findMember(m.id) != -1) {
+            cout << "Member ID already exists!\n";
             return;
         }
-        string name, email;
-        cout << "Enter Member Name: ";
-        getline(cin, name);
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Enter Name: ";
+        getline(cin, m.name);
         cout << "Enter Email: ";
-        getline(cin, email);
-        if (name.empty() || email.empty()) {
-            cout << "Name and email cannot be empty.\n";
+        getline(cin, m.email);
+
+        if (m.name.empty() || m.email.empty()) {
+            cout << "Name and email cannot be empty!\n";
             return;
         }
-        members[memberCount++] = Member(id, name, email);
+
+        members[memberCount++] = m;
         saveMembers();
-        cout << "Member registered successfully.\n";
+        cout << "Member registered successfully!\n";
     }
 
-    void displayMembers() const {
+    void displayMembers() {
         if (memberCount == 0) {
-            cout << "No members registered.\n";
+            cout << "No members found.\n";
             return;
         }
-        for (int i = 0; i < memberCount; i++) members[i].display();
+
+        cout << "\n------ MEMBER LIST ------\n";
+        for (int i = 0; i < memberCount; i++) {
+            cout << "\nID: " << members[i].id
+                 << "\nName: " << members[i].name
+                 << "\nEmail: " << members[i].email << '\n';
+        }
     }
 
-    void searchMember() const {
-        int id = readInt("Enter Member ID to search: ");
-        int index = findMemberIndex(id);
-        if (index == -1) cout << "Member not found.\n";
-        else members[index].display();
+    void searchMember() {
+        int id;
+        cout << "Enter Member ID: ";
+        cin >> id;
+
+        int i = findMember(id);
+        if (i == -1) {
+            cout << "Member not found!\n";
+            return;
+        }
+
+        cout << "\nName: " << members[i].name
+             << "\nEmail: " << members[i].email << '\n';
+    }
+
+    void updateMember() {
+        int id;
+        cout << "Enter Member ID to update: ";
+        cin >> id;
+
+        int i = findMember(id);
+        if (i == -1) {
+            cout << "Member not found!\n";
+            return;
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Enter new name: ";
+        getline(cin, members[i].name);
+        cout << "Enter new email: ";
+        getline(cin, members[i].email);
+
+        if (members[i].name.empty() || members[i].email.empty()) {
+            cout << "Invalid details. Update cancelled.\n";
+            return;
+        }
+
+        saveMembers();
+        cout << "Member updated successfully!\n";
     }
 
     void issueBook() {
-        int bookID = readInt("Enter Book ID to issue: ");
-        int bi = findBookIndex(bookID);
+        int issueBooks[MAX], issueMembers[MAX];
+        int count = loadIssues(issueBooks, issueMembers);
+
+        if (count >= MAX) {
+            cout << "Issue record storage is full!\n";
+            return;
+        }
+
+        int bookID, memberID;
+        cout << "Enter Book ID: ";
+        cin >> bookID;
+        cout << "Enter Member ID: ";
+        cin >> memberID;
+
+        int bi = findBook(bookID);
+        int mi = findMember(memberID);
+
         if (bi == -1) {
-            cout << "Book not found.\n";
-            return;
-        }
-        if (!books[bi].isAvailable()) {
-            cout << "This book is already issued.\n";
+            cout << "Book not found!\n";
             return;
         }
 
-        int memberID = readInt("Enter registered Member ID: ");
-        int mi = findMemberIndex(memberID);
         if (mi == -1) {
-            cout << "Member not found. Register the member first.\n";
-            return;
-        }
-        if (issueCount >= MAX_BOOKS) {
-            cout << "Issue record storage is full.\n";
+            cout << "Member not found! Register member first.\n";
             return;
         }
 
-        books[bi].setAvailability(false);
-        issuedBookIDs[issueCount] = bookID;
-        issuedMemberIDs[issueCount] = memberID;
-        issueCount++;
+        if (!books[bi].available) {
+            cout << "Book is already issued!\n";
+            return;
+        }
+
+        books[bi].available = false;
+        issueBooks[count] = bookID;
+        issueMembers[count] = memberID;
+        count++;
 
         saveBooks();
-        saveIssues();
-        cout << "Book issued successfully to " << members[mi].getName() << ".\n";
+        saveIssues(issueBooks, issueMembers, count);
+        logTransaction("ISSUED", bookID, memberID);
+
+        cout << "Book issued successfully!\n";
     }
 
     void returnBook() {
-        int bookID = readInt("Enter Book ID to return: ");
-        int bi = findBookIndex(bookID);
+        int issueBooks[MAX], issueMembers[MAX];
+        int count = loadIssues(issueBooks, issueMembers);
+
+        int bookID;
+        cout << "Enter Book ID to return: ";
+        cin >> bookID;
+
+        int bi = findBook(bookID);
         if (bi == -1) {
-            cout << "Book not found.\n";
-            return;
-        }
-        int ii = findIssueIndex(bookID);
-        if (ii == -1) {
-            cout << "This book is not currently issued.\n";
+            cout << "Book not found!\n";
             return;
         }
 
-        int memberIndex = findMemberIndex(issuedMemberIDs[ii]);
-        cout << "Returned by Member ID: " << issuedMemberIDs[ii];
-        if (memberIndex != -1)
-            cout << " (" << members[memberIndex].getName() << ")";
-        cout << '\n';
-
-        books[bi].setAvailability(true);
-        for (int i = ii; i < issueCount - 1; i++) {
-            issuedBookIDs[i] = issuedBookIDs[i + 1];
-            issuedMemberIDs[i] = issuedMemberIDs[i + 1];
+        if (books[bi].available) {
+            cout << "Book is not currently issued!\n";
+            return;
         }
-        issueCount--;
+
+        int pos = -1;
+        for (int i = 0; i < count; i++) {
+            if (issueBooks[i] == bookID) {
+                pos = i;
+                break;
+            }
+        }
+
+        if (pos == -1) {
+            cout << "Issue record not found. Check issued.txt.\n";
+            return;
+        }
+
+        int days;
+        cout << "Enter overdue days (0 if returned on time): ";
+        cin >> days;
+
+        if (days < 0) {
+            cout << "Invalid number of days!\n";
+            return;
+        }
+
+        int fine = days * FINE_PER_DAY;
+        int memberID = issueMembers[pos];
+
+        books[bi].available = true;
+
+        for (int i = pos; i < count - 1; i++) {
+            issueBooks[i] = issueBooks[i + 1];
+            issueMembers[i] = issueMembers[i + 1];
+        }
+        count--;
 
         saveBooks();
-        saveIssues();
-        cout << "Book returned successfully.\n";
+        saveIssues(issueBooks, issueMembers, count);
+        logTransaction("RETURNED", bookID, memberID, days, fine);
+
+        cout << "Book returned successfully!\n";
+        cout << "Fine: Rs." << fine << '\n';
     }
 
-    void run() {
-        int choice;
-        do {
-            cout << "\n========== LIBRARY MANAGEMENT SYSTEM ==========\n"
-                 << "1. Add New Book\n"
-                 << "2. Display All Books\n"
-                 << "3. Search Book by ID\n"
-                 << "4. Register New Member\n"
-                 << "5. Display All Members\n"
-                 << "6. Search Member by ID\n"
-                 << "7. Issue Book to Member\n"
-                 << "8. Return Book\n"
-                 << "9. Exit\n";
+    void transactionHistory() {
+        ifstream file("transactions.txt");
+        if (!file) {
+            cout << "No transaction history found.\n";
+            return;
+        }
 
-            choice = readInt("Enter your choice: ");
-            switch (choice) {
-                case 1: addBook(); break;
-                case 2: displayBooks(); break;
-                case 3: searchBook(); break;
-                case 4: registerMember(); break;
-                case 5: displayMembers(); break;
-                case 6: searchMember(); break;
-                case 7: issueBook(); break;
-                case 8: returnBook(); break;
-                case 9: cout << "Thank you for using the Library Management System.\n"; break;
-                default: cout << "Invalid choice. Please select 1-9.\n";
-            }
-        } while (choice != 9);
+        string line;
+        cout << "\n------ TRANSACTION HISTORY ------\n";
+        while (getline(file, line))
+            cout << line << '\n';
+    }
+
+    void reports() {
+        int available = 0, issued = 0;
+
+        for (int i = 0; i < bookCount; i++) {
+            if (books[i].available) available++;
+            else issued++;
+        }
+
+        cout << "\n------ LIBRARY REPORT ------\n";
+        cout << "Total Books: " << bookCount << '\n';
+        cout << "Available Books: " << available << '\n';
+        cout << "Issued Books: " << issued << '\n';
+        cout << "Total Members: " << memberCount << '\n';
+        cout << "Fine Rate: Rs." << FINE_PER_DAY
+             << " per overdue day\n";
     }
 };
 
+bool adminLogin() {
+    string username, password;
+
+    cout << "========== ADMIN LOGIN ==========\n";
+    cout << "Username: ";
+    cin >> username;
+    cout << "Password: ";
+    cin >> password;
+
+    if (username == "admin" && password == "admin123") {
+        cout << "\nLogin successful!\n";
+        return true;
+    }
+
+    cout << "\nInvalid username or password!\n";
+    return false;
+}
+
 int main() {
+    if (!adminLogin()) return 0;
+
     Library library;
-    library.run();
+    int choice;
+
+    do {
+        cout << "\n========== LIBRARY MANAGEMENT SYSTEM ==========\n";
+        cout << "1. Add New Book\n";
+        cout << "2. Display All Books\n";
+        cout << "3. Search Book by ID\n";
+        cout << "4. Search Book by Title/Author\n";
+        cout << "5. Update Book Details\n";
+        cout << "6. Delete Book\n";
+        cout << "7. Register New Member\n";
+        cout << "8. Display All Members\n";
+        cout << "9. Search Member\n";
+        cout << "10. Update Member Details\n";
+        cout << "11. Issue Book\n";
+        cout << "12. Return Book\n";
+        cout << "13. Transaction History\n";
+        cout << "14. Library Reports\n";
+        cout << "15. Exit\n";
+        cout << "Enter your choice: ";
+
+        if (!(cin >> choice)) {
+            cout << "Invalid input! Enter a number.\n";
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+
+        switch (choice) {
+            case 1: library.addBook(); break;
+            case 2: library.displayBooks(); break;
+            case 3: library.searchBook(); break;
+            case 4: library.searchBookByName(); break;
+            case 5: library.updateBook(); break;
+            case 6: library.deleteBook(); break;
+            case 7: library.registerMember(); break;
+            case 8: library.displayMembers(); break;
+            case 9: library.searchMember(); break;
+            case 10: library.updateMember(); break;
+            case 11: library.issueBook(); break;
+            case 12: library.returnBook(); break;
+            case 13: library.transactionHistory(); break;
+            case 14: library.reports(); break;
+            case 15: cout << "Thank you for using the system!\n"; break;
+            default: cout << "Invalid choice! Try again.\n";
+        }
+
+    } while (choice != 15);
+
     return 0;
 }
