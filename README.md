@@ -1,64 +1,154 @@
-Library Management System
+Library Management System (C++)
+
+
 
 Project Overview
 
-The Library Management System is a console-based application developed using C++. It aims to simplify basic library operations through Object-Oriented Programming (OOP) concepts.
 
-This project is being developed as part of our B.Tech CSE academic project.
 
-Current Features
+The Library Management System is a console-based application developed using C++ and Object-Oriented Programming (OOP) concepts. It helps manage books and library members, including issuing and returning books.
+
+
+
+Team Details
+
+
+
+\- Group ID: 1
+
+\- Team Members:
+
+&#x20; - Suraj Dhengare
+
+&#x20; - Bhavesh Prajapati
+
+
+
+Features
+
+
 
 Book Management
 
-- Add new books.
-- Display all available book records.
-- Search for books using Book ID.
-- Issue books.
-- Return books.
-- Prevent duplicate Book IDs.
-- Prevent issuing an already-issued book.
-- Prevent returning an already-available book.
-- Store book records in a text file.
-- Automatically load saved records when the program starts.
+
+
+\- Add new books
+
+\- Display all books
+
+\- Search books by ID
+
+\- Issue books
+
+\- Return books
+
+\- Prevent duplicate book IDs
+
+
+
+Member Management
+
+
+
+\- Register new members
+
+\- Display all members
+
+\- Search members by ID
+
+\- Prevent duplicate member IDs
+
+
+
+Issue and Return Management
+
+
+
+\- Issue books to registered members
+
+\- Prevent issuing unavailable books
+
+\- Track which member has borrowed a book
+
+\- Return issued books
+
+
+
+Data Persistence
+
+
+
+\- Save book records in "books.txt"
+
+\- Save member records in "members.txt"
+
+\- Save issue records in "issued.txt"
+
+\- Automatically load saved records when the application starts
+
+
 
 OOP Concepts Used
 
-- Classes and Objects
-- Encapsulation
-- Constructors
-- Data Members and Member Functions
+
+
+\- Classes and Objects
+
+\- Encapsulation
+
+\- Constructors
+
+\- Private data members
+
+\- Public member functions
+
+\- Arrays of objects
+
+
 
 Technologies Used
 
-- Programming Language: C++
-- IDE: Visual Studio Code
-- Compiler: GCC (g++)
-- Version Control: Git and GitHub
+
+
+\- Programming Language: C++
+
+\- IDE: Visual Studio Code
+
+\- Compiler: GCC (g++)
+
+
 
 How to Run
 
-1. Clone this repository.
 
-2. Open the project folder in Visual Studio Code.
 
-3. Open the terminal.
+Compile:
 
-4. Compile the program:
-   
-   g++ main.cpp -o library
 
-5. Run the program:
-   
-   ./library
-   
-   On Windows, you can also run:
-   
-   ./library.exe
 
-Data Storage
+g++ main.cpp -o library
 
-Book records are stored in "books.txt". The program loads saved records when it starts and updates the file when book information changes.
+
+
+Run:
+
+
+
+./library
+
+
 
 Project Status
 
-The Book Management module has been implemented and tested. Member Management and integration with the complete Library Management System are in progress.
+
+
+Core Book Management and Member Management features have been integrated and tested.
+
+
+
+Repository
+
+
+
+https://github.com/surajdhengare400-web/Library-Management-System
+
