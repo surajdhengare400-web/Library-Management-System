@@ -1,0 +1,15 @@
+# Runtime data (created automatically by the programs)
+Data/
+TestData_*/
+
+# Build output
+*.exe
+*.o
+*.obj
+/LibraryConsole
+/LibraryWeb
+/build/
+
+# Backups / temporary files made while saving data
+*.bak
+*.tmp
