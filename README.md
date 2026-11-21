@@ -7,7 +7,7 @@ shared core**:
 - a **website** (HTML + CSS) served by a small C++ HTTP server built into the program, and
 - a **menu-driven console application**.
 
-##Team Details
+## Team Details
 
 - Group ID: 1
 - Team Members:
