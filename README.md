@@ -7,9 +7,12 @@ shared core**:
 - a **website** (HTML + CSS) served by a small C++ HTTP server built into the program, and
 - a **menu-driven console application**.
 
-[![CI](https://github.com/YOUR-USERNAME/YOUR-REPOSITORY/actions/workflows/ci.yml/badge.svg)](../../actions)
+##Team Details
 
-> Replace `YOUR-USERNAME/YOUR-REPOSITORY` in the badge above after you create the GitHub repository.
+- Group ID: 1
+- Team Members:
+   - Suraj Dhengare (Enrollmentno: 17)
+   - Bhavesh Prajapati (Enrollment: 18)
 
 ## Features
 
